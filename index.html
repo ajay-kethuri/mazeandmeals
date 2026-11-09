@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maze & Meals — Find Your Way. Earn Your Feast.</title>
+<meta name="description" content="Maze & Meals is an outdoor adventure restaurant near Hyderabad. Navigate a green hedge maze to reach unlimited vegetarian and non-vegetarian food at its centre.">
+<meta name="theme-color" content="#0b2418">
+<meta property="og:title" content="Maze & Meals — Find Your Way. Earn Your Feast.">
+<meta property="og:description" content="Navigate a green hedge maze. Reach the restaurant at its heart. Eat unlimited.">
+<meta property="og:type" content="website">
+<style>
+:root{
+  --forest:#0b2418; --forest-2:#12301f; --leaf:#5fbf5a; --leaf-2:#9be36f;
+  --cream:#f5f1e8; --white:#fff; --ink:#1d1d1f; --muted:#6e6e73; --wood:#a47148;
+  --radius:28px; --ease:cubic-bezier(.22,.61,.36,1);
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text","Inter","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:64px}
+body{font-family:var(--font);color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased;line-height:1.47;letter-spacing:-.01em}
+img,svg{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:3px solid var(--leaf);outline-offset:3px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.skip{position:absolute;left:-999px;top:8px;background:#fff;padding:8px 14px;border-radius:99px;z-index:200}
+.skip:focus{left:8px}
+
+/* NAV */
+nav.top{position:fixed;inset:0 0 auto 0;height:52px;z-index:100;background:rgba(11,36,24,.72);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid rgba(255,255,255,.08)}
+nav .in{max-width:1024px;margin:auto;height:100%;display:flex;align-items:center;justify-content:space-between;padding:0 22px}
+.logo{font-weight:700;color:#fff;font-size:17px;letter-spacing:-.02em;display:flex;align-items:center;gap:8px}
+.logo i{width:18px;height:18px;border:2.5px solid var(--leaf);border-radius:5px;display:inline-block;position:relative}
+.logo i::after{content:"";position:absolute;inset:3px;border:2px solid var(--leaf-2);border-right-color:transparent;border-radius:2px}
+nav ul{display:flex;gap:28px;list-style:none}
+nav ul a{font-size:12px;color:rgba(255,255,255,.8);transition:color .2s}
+nav ul a:hover{color:#fff}
+.pill-sm{background:var(--leaf);color:#06200f;font-size:12px;font-weight:600;padding:6px 14px;border-radius:99px;transition:transform .2s var(--ease),background .2s}
+.pill-sm:hover{background:var(--leaf-2);transform:scale(1.04)}
+.menu-btn{display:none;color:#fff;width:36px;height:36px}
+@media(max-width:760px){
+  nav ul{position:fixed;top:52px;left:0;right:0;flex-direction:column;gap:0;background:rgba(11,36,24,.97);padding:8px 22px 20px;transform:translateY(-130%);transition:transform .35s var(--ease)}
+  nav ul.open{transform:none}
+  nav ul a{display:block;padding:14px 0;font-size:17px;border-bottom:1px solid rgba(255,255,255,.08)}
+  .menu-btn{display:block}
+  .pill-sm{display:none}
+}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 28px;border-radius:99px;font-size:17px;font-weight:500;transition:transform .25s var(--ease),background .25s,box-shadow .25s}
+.btn:hover{transform:scale(1.03)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--leaf);color:#06200f}
+.btn-primary:hover{background:var(--leaf-2);box-shadow:0 10px 30px rgba(95,191,90,.35)}
+.btn-ghost{color:var(--leaf-2);box-shadow:inset 0 0 0 1.5px rgba(155,227,111,.6)}
+.btn-ghost:hover{background:rgba(155,227,111,.12)}
+.btn-dark{background:var(--forest);color:#fff}
+.btn-dark:hover{background:var(--forest-2)}
+.link{color:#0a7a3b;font-size:19px;font-weight:500}
+.link:hover{text-decoration:underline}
+.link::after{content:" ›"}
+
+/* SECTIONS */
+section{padding:120px 22px;position:relative}
+.wrap{max-width:1024px;margin:auto}
+.wide{max-width:1180px;margin:auto}
+.eyebrow{font-size:17px;font-weight:600;color:var(--leaf);margin-bottom:10px}
+.light .eyebrow{color:#2b8a3e}
+h1,h2{letter-spacing:-.035em;line-height:1.05;font-weight:700}
+h2{font-size:clamp(34px,6vw,64px)}
+.lead{font-size:clamp(19px,2.6vw,26px);color:var(--muted);max-width:760px;margin-top:18px;line-height:1.3;letter-spacing:-.015em}
+.center{text-align:center}.center .lead{margin-inline:auto}
+.dark{background:var(--forest);color:#f5f5f7}
+.dark .lead{color:rgba(245,245,247,.68)}
+.cream{background:var(--cream)}
+.grad{background:linear-gradient(90deg,var(--leaf-2),#e7f9a8 60%,var(--leaf));-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* HERO */
+.hero{min-height:100vh;padding:120px 22px 60px;background:radial-gradient(120% 80% at 50% 0%,#1b4a2c 0%,var(--forest) 55%,#06150d 100%);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;overflow:hidden}
+.hero .tag{font-size:17px;color:var(--leaf-2);font-weight:600;margin-bottom:14px}
+.hero h1{font-size:clamp(44px,9.5vw,112px);max-width:1100px}
+.hero p.sub{font-size:clamp(18px,2.4vw,24px);color:rgba(255,255,255,.72);max-width:700px;margin:22px auto 0;line-height:1.3}
+.hero .cta{display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin-top:34px}
+.maze-stage{margin-top:56px;width:min(560px,86vw);aspect-ratio:1;position:relative;filter:drop-shadow(0 30px 60px rgba(0,0,0,.5))}
+.maze-stage svg{width:100%;height:100%}
+.maze-stage .walls{stroke:#3f9d49;stroke-width:5;stroke-linecap:round;fill:none}
+.maze-stage .solve{stroke:#f6e27a;stroke-width:5;stroke-linecap:round;stroke-linejoin:round;fill:none;filter:drop-shadow(0 0 6px rgba(246,226,122,.8))}
+.maze-caption{margin-top:18px;font-size:14px;color:rgba(255,255,255,.55)}
+.stats{display:flex;gap:40px;flex-wrap:wrap;justify-content:center;margin-top:46px}
+.stats div{font-size:14px;color:rgba(255,255,255,.6)}
+.stats b{display:block;font-size:30px;color:#fff;letter-spacing:-.03em}
+
+/* STEPS */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:70px}
+.step{background:#fff;border-radius:var(--radius);padding:40px 30px 34px;box-shadow:0 2px 24px rgba(11,36,24,.06);transition:transform .4s var(--ease),box-shadow .4s}
+.step:hover{transform:translateY(-8px);box-shadow:0 24px 50px rgba(11,36,24,.14)}
+.step .num{font-size:14px;font-weight:700;color:#2b8a3e;letter-spacing:.08em}
+.step svg{width:100%;height:150px;margin:18px 0 22px}
+.step h3{font-size:28px;letter-spacing:-.03em;line-height:1.1}
+.step p{color:var(--muted);margin-top:10px;font-size:17px}
+@media(max-width:860px){.steps{grid-template-columns:1fr}}
+
+/* BENTO */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:18px;margin-top:70px}
+.tile{border-radius:var(--radius);padding:34px;min-height:300px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .45s var(--ease)}
+.tile:hover{transform:scale(1.015)}
+.tile h3{font-size:28px;letter-spacing:-.03em;line-height:1.1;position:relative;z-index:1}
+.tile p{margin-top:8px;font-size:17px;opacity:.8;position:relative;z-index:1;max-width:420px}
+.tile .art{position:absolute;inset:0;opacity:.9}
+.t1{grid-column:span 4;background:linear-gradient(160deg,#1f5a32,#0e2e1b);color:#fff}
+.t2{grid-column:span 2;background:#fff;color:var(--ink)}
+.t3{grid-column:span 2;background:var(--wood);color:#fff}
+.t4{grid-column:span 2;background:linear-gradient(160deg,#fbe9b7,#f3c969);color:#3b2a05}
+.t5{grid-column:span 2;background:linear-gradient(200deg,#16213e,#0b1026);color:#fff}
+.t6{grid-column:span 6;background:#fff;color:var(--ink);min-height:240px}
+@media(max-width:860px){.bento{grid-template-columns:1fr}.tile,.t1,.t2,.t3,.t4,.t5,.t6{grid-column:span 1;min-height:260px}}
+
+/* MENU */
+.menus{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:70px}
+.menu-card{border-radius:var(--radius);padding:46px 40px;position:relative;overflow:hidden}
+.menu-card.veg{background:linear-gradient(170deg,#1c4d2c,#0f2f1b);color:#fff}
+.menu-card.nonveg{background:linear-gradient(170deg,#4b2418,#2a120b);color:#fff}
+.menu-card .badge{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:5px 12px;border-radius:99px;background:rgba(255,255,255,.12)}
+.dot{width:12px;height:12px;border:2px solid;border-radius:3px;display:inline-grid;place-items:center}
+.dot::after{content:"";width:5px;height:5px;border-radius:50%;background:currentColor}
+.veg .dot{color:#7fe07a}.nonveg .dot{color:#ff8a6b}
+.menu-card h3{font-size:34px;letter-spacing:-.03em;margin-top:20px}
+.price{font-size:clamp(64px,9vw,92px);font-weight:700;letter-spacing:-.05em;line-height:1;margin:14px 0 4px}
+.price small{font-size:18px;font-weight:500;opacity:.7;letter-spacing:0;margin-left:6px}
+.menu-card ul{list-style:none;margin:26px 0 32px}
+.menu-card li{padding:11px 0;border-top:1px solid rgba(255,255,255,.12);font-size:17px;display:flex;gap:10px}
+.menu-card li::before{content:"✓";color:var(--leaf-2);font-weight:700}
+.nonveg li::before{color:#ffb199}
+.note{font-size:14px;color:rgba(255,255,255,.55);text-align:center;margin-top:30px}
+@media(max-width:860px){.menus{grid-template-columns:1fr}.menu-card{padding:36px 26px}}
+
+/* BOOKING */
+.book-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:26px;margin-top:60px;align-items:start}
+.panel{background:#fff;border-radius:var(--radius);padding:38px;box-shadow:0 2px 30px rgba(11,36,24,.07)}
+.panel h3{font-size:22px;letter-spacing:-.025em;margin-bottom:18px}
+fieldset{border:0;margin-bottom:30px}
+legend{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em}
+label.field{display:block;font-size:14px;font-weight:600;margin-bottom:16px}
+input[type=text],input[type=tel],input[type=email],input[type=date]{width:100%;margin-top:6px;padding:14px 16px;border:1.5px solid #d2d2d7;border-radius:14px;font:inherit;font-size:17px;background:#fff;transition:border-color .2s,box-shadow .2s}
+input:focus{outline:none;border-color:var(--leaf);box-shadow:0 0 0 4px rgba(95,191,90,.25)}
+input[aria-invalid=true]{border-color:#d93025}
+.err{color:#d93025;font-size:13px;font-weight:500;min-height:18px;margin-top:4px}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.chip{position:relative}
+.chip input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.chip span{display:block;text-align:center;padding:13px 8px;border-radius:14px;border:1.5px solid #d2d2d7;font-size:15px;font-weight:500;transition:all .2s;background:#fff}
+.chip span small{display:block;font-size:12px;color:var(--muted);font-weight:400}
+.chip input:checked+span{border-color:var(--leaf);background:#eefae9;box-shadow:0 0 0 3px rgba(95,191,90,.25)}
+.chip input:focus-visible+span{outline:3px solid var(--leaf);outline-offset:2px}
+.chip input:disabled+span{opacity:.4;background:#f5f5f7;text-decoration:line-through;cursor:not-allowed}
+.pkg{grid-template-columns:1fr 1fr}
+.pkg .chip span{padding:18px 10px}
+.pkg b{font-size:22px;letter-spacing:-.03em;display:block}
+.stepper{display:flex;align-items:center;justify-content:space-between;border:1.5px solid #d2d2d7;border-radius:14px;padding:8px 12px;margin-bottom:12px}
+.stepper div:first-child small{display:block;color:var(--muted);font-size:13px}
+.stepper .ctl{display:flex;align-items:center;gap:14px}
+.stepper button{width:36px;height:36px;border-radius:50%;background:#f0f0f2;font-size:20px;line-height:1;transition:background .2s}
+.stepper button:hover{background:#e0f4da}
+.stepper output{min-width:24px;text-align:center;font-size:19px;font-weight:600}
+.summary{position:sticky;top:76px;background:var(--forest);color:#fff}
+.summary h3{color:#fff}
+.summary dl{display:grid;grid-template-columns:auto 1fr;gap:10px 16px;font-size:15px}
+.summary dt{color:rgba(255,255,255,.55)}
+.summary dd{text-align:right;font-weight:500}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:1px solid rgba(255,255,255,.18);margin-top:20px;padding-top:18px}
+.total b{font-size:42px;letter-spacing:-.04em}
+.summary .btn{width:100%;margin-top:22px}
+.fine{font-size:12.5px;color:rgba(255,255,255,.5);margin-top:14px;line-height:1.4}
+.result{display:none;margin-top:18px;padding:16px;border-radius:16px;background:rgba(246,226,122,.14);color:#f6e27a;font-size:14.5px;line-height:1.4}
+.result.show{display:block}
+@media(max-width:900px){.book-grid{grid-template-columns:1fr}.summary{position:static}.panel{padding:28px 22px}}
+
+/* GALLERY */
+.gallery{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:210px;gap:14px;margin-top:60px}
+.g{border-radius:24px;position:relative;overflow:hidden;display:flex;align-items:flex-end;padding:20px;color:#fff;transition:transform .45s var(--ease)}
+.g:hover{transform:scale(1.025)}
+.g svg{position:absolute;inset:0;width:100%;height:100%}
+.g span{position:relative;font-weight:600;font-size:17px;text-shadow:0 1px 12px rgba(0,0,0,.45)}
+.g1{grid-column:span 2;grid-row:span 2;background:linear-gradient(160deg,#2c7a3f,#0c2c19)}
+.g2{background:linear-gradient(160deg,#c9a26b,#7b5530)}
+.g3{background:linear-gradient(160deg,#e2762b,#8e2d12)}
+.g4{grid-row:span 2;background:linear-gradient(160deg,#f2a7c0,#a74e72)}
+.g5{background:linear-gradient(160deg,#6fb38a,#245a3a)}
+.g6{grid-column:span 2;background:linear-gradient(160deg,#1a2350,#07091c)}
+@media(max-width:860px){.gallery{grid-template-columns:1fr 1fr;grid-auto-rows:170px}.g1{grid-column:span 2}.g6{grid-column:span 2}}
+.ph{font-size:13px;color:var(--muted);text-align:center;margin-top:18px}
+
+/* EVENTS */
+.events{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:60px}
+.ev{background:#fff;border-radius:var(--radius);padding:34px 30px;display:flex;flex-direction:column;transition:transform .4s var(--ease),box-shadow .4s;box-shadow:0 2px 24px rgba(11,36,24,.06)}
+.ev:hover{transform:translateY(-6px);box-shadow:0 22px 44px rgba(11,36,24,.13)}
+.ev .em{font-size:40px;margin-bottom:14px}
+.ev h3{font-size:24px;letter-spacing:-.03em}
+.ev p{color:var(--muted);margin:8px 0 22px;flex:1}
+@media(max-width:860px){.events{grid-template-columns:1fr}}
+
+/* CONTACT */
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:60px}
+.mapbox{border-radius:var(--radius);min-height:380px;background:
+  linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px) 0 0/40px 40px,
+  linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px) 0 0/40px 40px,
+  #17402a;display:grid;place-items:center;text-align:center;padding:30px;color:#fff}
+.mapbox .pin{font-size:44px}
+.mapbox p{color:rgba(255,255,255,.7);font-size:15px;max-width:300px}
+.info{display:grid;gap:14px}
+.info .row{background:rgba(255,255,255,.07);border-radius:22px;padding:22px 26px}
+.info small{color:rgba(255,255,255,.5);font-size:13px;display:block}
+.info b{font-size:19px;font-weight:600}
+.ph-txt{color:rgba(255,255,255,.55);font-style:italic;font-weight:400}
+.wa{background:#25d366;color:#05301a}
+.wa:hover{background:#4ae587}
+@media(max-width:860px){.contact{grid-template-columns:1fr}}
+
+/* FOOTER */
+footer{background:#f5f5f7;padding:50px 22px 30px;font-size:13px;color:var(--muted)}
+footer .cols{display:flex;flex-wrap:wrap;gap:12px 28px;padding-bottom:20px;border-bottom:1px solid #d2d2d7;margin-bottom:18px}
+footer a:hover{color:var(--ink);text-decoration:underline}
+footer .legal{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+
+/* REVEAL */
+.rv{opacity:0;transform:translateY(40px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+.rv.in{opacity:1;transform:none}
+.rv.d1{transition-delay:.1s}.rv.d2{transition-delay:.2s}.rv.d3{transition-delay:.3s}
+.toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,120px);background:#1d1d1f;color:#fff;padding:14px 22px;border-radius:99px;font-size:14px;z-index:300;transition:transform .4s var(--ease);max-width:90vw;text-align:center}
+.toast.show{transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.rv{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<nav class="top" aria-label="Main">
+  <div class="in">
+    <a href="#home" class="logo"><i></i>Maze &amp; Meals</a>
+    <ul id="navlist">
+      <li><a href="#how">How it works</a></li>
+      <li><a href="#maze">The Maze</a></li>
+      <li><a href="#menu">Food Menu</a></li>
+      <li><a href="#gallery">Gallery</a></li>
+      <li><a href="#events">Events</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+    <a href="#book" class="pill-sm">Book</a>
+    <button class="menu-btn" id="menuBtn" aria-label="Toggle menu" aria-expanded="false" aria-controls="navlist">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M2 6h16M2 14h16"/></svg>
+    </button>
+  </div>
+</nav>
+
+<main id="main">
+
+<!-- HERO -->
+<header class="hero" id="home">
+  <p class="tag rv">Find Your Way. Earn Your Feast.</p>
+  <h1 class="rv d1">GET LOST IN THE MAZE.<br><span class="grad">FIND YOUR FEAST!</span></h1>
+  <p class="sub rv d2">An unforgettable adventure awaits. Navigate through beautiful green pathways and discover unlimited delicious food at the heart of the maze.</p>
+  <div class="cta rv d3">
+    <a href="#book" class="btn btn-primary">Book Your Experience</a>
+    <a href="#maze" class="btn btn-ghost">Explore Our Maze</a>
+  </div>
+  <div class="maze-stage rv d3" role="img" aria-label="Illustration of a green hedge maze with a golden path leading to a restaurant at the centre">
+    <svg id="heroMaze" viewBox="-14 -14 428 428" aria-hidden="true"></svg>
+  </div>
+  <p class="maze-caption">The path is lit up for you here. Inside, you’ll have to find it yourself.</p>
+  <div class="stats rv">
+    <div><b>1</b>Maze</div>
+    <div><b>∞</b>Unlimited food</div>
+    <div><b>2</b>Feast packages</div>
+    <div><b>All ages</b>Family friendly</div>
+  </div>
+</header>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="cream light">
+  <div class="wrap center">
+    <p class="eyebrow rv">How it works</p>
+    <h2 class="rv d1">Three steps.<br>One unforgettable meal.</h2>
+    <p class="lead rv d2">No table reservations. No waiting at the door. Your appetite starts at the entrance and the food is waiting at the centre.</p>
+    <div class="steps">
+      <article class="step rv">
+        <span class="num">STEP 1</span>
+        <svg viewBox="0 0 200 150" aria-hidden="true"><rect x="40" y="30" width="120" height="90" rx="14" fill="#0b2418"/><circle cx="40" cy="75" r="11" fill="#f5f1e8"/><circle cx="160" cy="75" r="11" fill="#f5f1e8"/><path d="M100 40v70" stroke="#5fbf5a" stroke-width="3" stroke-dasharray="5 6"/><text x="70" y="82" fill="#9be36f" font-size="18" font-weight="700" text-anchor="middle" font-family="sans-serif">ADMIT</text><text x="132" y="82" fill="#9be36f" font-size="18" font-weight="700" text-anchor="middle" font-family="sans-serif">ONE</text></svg>
+        <h3>Enter the Maze</h3><p>Get your ticket and begin your adventure.</p>
+      </article>
+      <article class="step rv d1">
+        <span class="num">STEP 2</span>
+        <svg viewBox="0 0 200 150" aria-hidden="true"><path d="M20 20h160v110H20z" fill="#e3f4dc" rx="10"/><path d="M20 50h80M100 50v40M60 90h100M60 90v40M140 20v50M140 110v20" stroke="#2f8f3c" stroke-width="6" stroke-linecap="round" fill="none"/><path d="M30 35 L30 70 L80 70 L80 105 L120 105 L120 70 L165 70" stroke="#e3a712" stroke-width="3.5" stroke-dasharray="2 8" stroke-linecap="round" fill="none"/></svg>
+        <h3>Find Your Way</h3><p>Navigate through exciting green pathways and discover hidden surprises.</p>
+      </article>
+      <article class="step rv d2">
+        <span class="num">STEP 3</span>
+        <svg viewBox="0 0 200 150" aria-hidden="true"><ellipse cx="100" cy="100" rx="70" ry="20" fill="#d9d2c0"/><ellipse cx="100" cy="92" rx="62" ry="16" fill="#fff"/><path d="M60 88q40-60 80 0z" fill="#e3a712"/><circle cx="100" cy="52" r="5" fill="#0b2418"/><path d="M82 58c-6-14 2-22 8-26M118 58c6-14-2-22-8-26" stroke="#bbb" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+        <h3>Enjoy Unlimited Food</h3><p>Reach the restaurant and enjoy a delicious unlimited buffet.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- MAZE EXPERIENCE -->
+<section id="maze" class="dark">
+  <div class="wide">
+    <div class="center">
+      <p class="eyebrow rv">Our maze experience</p>
+      <h2 class="rv d1">The maze is the main course.</h2>
+      <p class="lead rv d2">Towering hedge walls, twisting turns, and a restaurant waiting at the heart of it all.</p>
+    </div>
+    <div class="bento">
+      <article class="tile t1 rv">
+        <svg class="art" viewBox="0 0 400 300" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="#3f9d49" stroke-width="10" stroke-linecap="round" fill="none" opacity=".5"><path d="M20 40h200M220 40v120M60 100h120M60 100v140M120 160h200M320 160v100M180 220h140M20 260h100"/></g></svg>
+        <h3>Green tree walls</h3><p>Lush, dense hedges stand taller than you. Every corner reveals a new view.</p>
+      </article>
+      <article class="tile t2 rv d1">
+        <h3>Turns &amp; dead ends</h3><p>A real maze with real wrong turns. Bring patience, and a sense of humour.</p>
+      </article>
+      <article class="tile t3 rv">
+        <h3>Family-friendly routes</h3><p>Shorter, simpler routes for little explorers and grandparents.</p>
+      </article>
+      <article class="tile t4 rv d1">
+        <h3>Photo spots</h3><p>Archways, lookouts and leafy corners made for the perfect picture.</p>
+      </article>
+      <article class="tile t5 rv d2">
+        <svg class="art" viewBox="0 0 300 300" aria-hidden="true"><g fill="#ffd877"><circle cx="50" cy="60" r="3"/><circle cx="120" cy="40" r="2"/><circle cx="210" cy="70" r="3"/><circle cx="260" cy="30" r="2"/><circle cx="90" cy="120" r="2"/><circle cx="180" cy="130" r="3"/><circle cx="250" cy="110" r="2"/></g></svg>
+        <h3>Evening lighting</h3><p>When the sun sets, the maze glows. It’s a different adventure after dark.</p>
+      </article>
+      <article class="tile t6 rv">
+        <h3>Hidden clues &amp; treasure hunts</h3><p>Look closely: clues are tucked into the hedges. Collect them as you go and see what you’ve earned by the time you reach the centre.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section id="menu" class="dark" style="padding-top:0">
+  <div class="wide">
+    <div class="center">
+      <p class="eyebrow rv">Unlimited food menu</p>
+      <h2 class="rv d1">Eat as much as you like.<br>You earned it.</h2>
+      <p class="lead rv d2">Your entry ticket includes access to the maze and a full unlimited meal. Pick your feast.</p>
+    </div>
+    <div class="menus">
+      <article class="menu-card veg rv">
+        <span class="badge"><span class="dot"></span>Pure Vegetarian</span>
+        <h3>Vegetarian Feast</h3>
+        <div class="price">₹299<small>per person</small></div>
+        <ul>
+          <li>Vegetable biryani</li><li>White rice</li><li>Dal</li><li>Seasonal curries</li><li>Roti</li><li>Sambar or rasam</li><li>Curd</li><li>Dessert</li>
+        </ul>
+        <a href="#book" class="btn btn-primary" data-pkg="veg">Choose Vegetarian</a>
+      </article>
+      <article class="menu-card nonveg rv d1">
+        <span class="badge"><span class="dot"></span>Non-Vegetarian</span>
+        <h3>Non-Vegetarian Feast</h3>
+        <div class="price">₹399<small>per person</small></div>
+        <ul>
+          <li>Chicken biryani</li><li>White rice</li><li>Chicken curry</li><li>Vegetarian curry</li><li>Dal</li><li>Roti</li><li>Curd</li><li>Dessert</li>
+        </ul>
+        <a href="#book" class="btn btn-primary" data-pkg="nonveg">Choose Non-Veg</a>
+      </article>
+    </div>
+    <p class="note">Menu items may change depending on availability.</p>
+  </div>
+</section>
+
+<!-- BOOKING -->
+<section id="book" class="cream light">
+  <div class="wide">
+    <div class="center">
+      <p class="eyebrow rv">Book tickets</p>
+      <h2 class="rv d1">Reserve your adventure.</h2>
+      <p class="lead rv d2">Choose a date, a slot and a feast. We’ll show your total before you confirm.</p>
+    </div>
+    <form id="bookForm" class="book-grid" novalidate>
+      <div class="panel rv">
+        <fieldset>
+          <legend>1 · Date</legend>
+          <label class="field" for="date">Visit date
+            <input type="date" id="date" name="date" required aria-describedby="dateErr">
+          </label>
+          <div class="err" id="dateErr" role="alert"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>2 · Time slot</legend>
+          <div class="chips" id="slots" role="radiogroup" aria-label="Time slot"></div>
+          <div class="err" id="slotErr" role="alert"></div>
+        </fieldset>
+
+        <fieldset>
+          <legend>3 · Package</legend>
+          <div class="chips pkg" role="radiogroup" aria-label="Package">
+            <label class="chip"><input type="radio" name="pkg" value="veg" checked><span><b>₹299</b>Vegetarian Feast</span></label>
+            <label class="chip"><input type="radio" name="pkg" value="nonveg"><span><b>₹399</b>Non-Veg Feast</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>4 · Guests</legend>
+          <div class="stepper"><div><b>Adults</b><small>Age 13 and above</small></div>
+            <div class="ctl"><button type="button" data-step="adults" data-d="-1" aria-label="Fewer adults">−</button><output id="adults" aria-live="polite">2</output><button type="button" data-step="adults" data-d="1" aria-label="More adults">+</button></div></div>
+          <div class="stepper"><div><b>Children</b><small>Age 4 to 12 (sample pricing)</small></div>
+            <div class="ctl"><button type="button" data-step="children" data-d="-1" aria-label="Fewer children">−</button><output id="children" aria-live="polite">0</output><button type="button" data-step="children" data-d="1" aria-label="More children">+</button></div></div>
+          <div class="err" id="guestErr" role="alert"></div>
+        </fieldset>
+
+        <fieldset style="margin-bottom:0">
+          <legend>5 · Your details</legend>
+          <label class="field" for="name">Full name
+            <input type="text" id="name" name="name" autocomplete="name" required aria-describedby="nameErr"></label>
+          <div class="err" id="nameErr" role="alert"></div>
+          <label class="field" for="mobile">Mobile number
+            <input type="tel" id="mobile" name="mobile" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit number" maxlength="10" required aria-describedby="mobileErr"></label>
+          <div class="err" id="mobileErr" role="alert"></div>
+          <label class="field" for="email">Email
+            <input type="email" id="email" name="email" autocomplete="email" required aria-describedby="emailErr"></label>
+          <div class="err" id="emailErr" role="alert"></div>
+        </fieldset>
+      </div>
+
+      <aside class="panel summary rv d1" aria-labelledby="sumTitle">
+        <h3 id="sumTitle">Booking summary</h3>
+        <dl id="sumList"></dl>
+        <div class="total"><span>Total</span><b id="total">₹0</b></div>
+        <button type="submit" class="btn btn-primary">Review &amp; Confirm</button>
+        <div class="result" id="result" role="status"></div>
+        <p class="fine">Demo mode: availability shown is sample data and no payment is taken. A real booking backend and payment gateway will be connected before launch.</p>
+      </aside>
+    </form>
+  </div>
+</section>
+
+<!-- GALLERY -->
+<section id="gallery">
+  <div class="wide center">
+    <p class="eyebrow rv" style="color:#2b8a3e">Gallery</p>
+    <h2 class="rv d1">A place worth getting lost in.</h2>
+    <div class="gallery">
+      <figure class="g g1 rv"><svg viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g stroke="#7fe07a" stroke-width="12" stroke-linecap="round" fill="none" opacity=".35"><path d="M30 40h300M330 40v140M70 110h200M70 110v200M130 180h220M130 250h160M290 250v110M30 330h200"/></g></svg><span>Green hedge maze</span></figure>
+      <figure class="g g2 rv d1"><svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><path d="M30 110l70-50 70 50v60H30z" fill="#fff" opacity=".25"/></svg><span>Restaurant at the centre</span></figure>
+      <figure class="g g3 rv d2"><span>Food buffet</span></figure>
+      <figure class="g g4 rv"><span>Family entertainment</span></figure>
+      <figure class="g g5 rv d1"><span>Garden seating</span></figure>
+      <figure class="g g6 rv d2"><svg viewBox="0 0 400 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><g fill="#ffd877"><circle cx="40" cy="40" r="3"/><circle cx="110" cy="80" r="2"/><circle cx="190" cy="30" r="3"/><circle cx="260" cy="90" r="2"/><circle cx="340" cy="50" r="3"/><circle cx="380" cy="120" r="2"/></g></svg><span>Evening lighting</span></figure>
+    </div>
+    <p class="ph">Illustrated placeholders. Replace each tile with your own optimised photography before launch.</p>
+  </div>
+</section>
+
+<!-- EVENTS -->
+<section id="events" class="cream light">
+  <div class="wide center">
+    <p class="eyebrow rv">Special events</p>
+    <h2 class="rv d1">Celebrate somewhere<br>nobody forgets.</h2>
+    <div class="events">
+      <article class="ev rv"><div class="em" aria-hidden="true">🎂</div><h3>Birthday celebrations</h3><p>A maze race, a feast and a story the birthday star will tell for years.</p><a href="#contact" class="link" data-enq="Birthday celebration">Enquire</a></article>
+      <article class="ev rv d1"><div class="em" aria-hidden="true">👨‍👩‍👧‍👦</div><h3>Family gatherings</h3><p>Three generations, one table, and a little friendly competition on the way.</p><a href="#contact" class="link" data-enq="Family gathering">Enquire</a></article>
+      <article class="ev rv d2"><div class="em" aria-hidden="true">🧑‍🤝‍🧑</div><h3>Friends’ outings</h3><p>Split into teams. Race to the centre. Loser queues for dessert.</p><a href="#contact" class="link" data-enq="Friends outing">Enquire</a></article>
+      <article class="ev rv"><div class="em" aria-hidden="true">💼</div><h3>Corporate team outings</h3><p>Real team-building: communication, strategy and lunch included.</p><a href="#contact" class="link" data-enq="Corporate team outing">Enquire</a></article>
+      <article class="ev rv d1"><div class="em" aria-hidden="true">🎉</div><h3>Weekend special events</h3><p>Themed weekends, treasure hunts and evening-lit maze nights.</p><a href="#contact" class="link" data-enq="Weekend special event">Enquire</a></article>
+    </div>
+  </div>
+</section>
+
+<!-- CONTACT -->
+<section id="contact" class="dark">
+  <div class="wide">
+    <div class="center">
+      <p class="eyebrow rv">Location &amp; contact</p>
+      <h2 class="rv d1">Come find us.</h2>
+      <p class="lead rv d2">Hyderabad outskirts, Telangana.</p>
+    </div>
+    <div class="contact">
+      <div class="mapbox rv"><div><div class="pin" aria-hidden="true">📍</div><h3 style="margin:8px 0">Google Maps goes here</h3><p>Embed your Google Maps iframe in this container once the final location is confirmed.</p></div></div>
+      <div class="info rv d1">
+        <div class="row"><small>Location</small><b>Hyderabad outskirts, Telangana</b></div>
+        <div class="row"><small>Phone</small><b class="ph-txt">[Contact number placeholder]</b></div>
+        <div class="row"><small>Business hours</small><b class="ph-txt">[Business hours placeholder]</b></div>
+        <div class="row"><small id="enqLabel">Enquiry</small><b id="enqText" class="ph-txt">Tap an event’s “Enquire” button to start an enquiry.</b></div>
+        <a href="#" class="btn wa" id="waBtn">WhatsApp Enquiry</a>
+        <a href="#" class="btn btn-ghost" id="igBtn">Follow on Instagram</a>
+      </div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wide">
+    <div class="cols">
+      <a href="#home">Home</a><a href="#how">About Us</a><a href="#maze">Maze Experience</a><a href="#menu">Food Menu</a><a href="#book">Book Tickets</a><a href="#contact">Contact</a><a href="#" data-soon="Privacy Policy">Privacy Policy</a><a href="#" data-soon="Terms and Conditions">Terms and Conditions</a>
+    </div>
+    <div class="legal"><span>© 2026 Maze &amp; Meals. Find Your Way. Earn Your Feast.</span><span>Hyderabad, Telangana, India</span></div>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- CONFIG (fill in before launch) ---------- */
+const CONFIG = {
+  prices: { veg: 299, nonveg: 399 },
+  childRate: 0.5,            // SAMPLE: children at 50%. Replace with real pricing.
+  maxPerType: 20,
+  slots: ["10:00 AM","12:00 PM","2:00 PM","4:00 PM","6:00 PM","8:00 PM"],
+  whatsappNumber: "",        // e.g. "91XXXXXXXXXX" (country code + number, no +)
+  instagramUrl: "",          // e.g. "https://instagram.com/yourhandle"
+};
+
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+const inr = n => "₹" + n.toLocaleString("en-IN");
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(toast.id);toast.id=setTimeout(()=>t.classList.remove("show"),3200)}
+
+/* ---------- NAV ---------- */
+const menuBtn=$("#menuBtn"), navlist=$("#navlist");
+menuBtn.addEventListener("click",()=>{const o=navlist.classList.toggle("open");menuBtn.setAttribute("aria-expanded",o)});
+$$("#navlist a").forEach(a=>a.addEventListener("click",()=>{navlist.classList.remove("open");menuBtn.setAttribute("aria-expanded","false")}));
+
+/* ---------- REVEAL ---------- */
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target)}}),{threshold:.12});
+$$(".rv").forEach(el=>io.observe(el));
+
+/* ---------- HERO MAZE (generated + solved in-browser) ---------- */
+(function(){
+  const N=16, S=25, svg=$("#heroMaze");
+  let seed=2026; const rnd=()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+  const cells=Array.from({length:N*N},()=>({n:1,e:1,s:1,w:1,v:0}));
+  const at=(x,y)=>cells[y*N+x];
+  const dirs=[["n",0,-1,"s"],["e",1,0,"w"],["s",0,1,"n"],["w",-1,0,"e"]];
+  const stack=[[0,0]]; at(0,0).v=1;
+  while(stack.length){
+    const [x,y]=stack[stack.length-1];
+    const opts=dirs.filter(([,dx,dy])=>{const nx=x+dx,ny=y+dy;return nx>=0&&ny>=0&&nx<N&&ny<N&&!at(nx,ny).v});
+    if(!opts.length){stack.pop();continue}
+    const [d,dx,dy,o]=opts[Math.floor(rnd()*opts.length)];
+    at(x,y)[d]=0; at(x+dx,y+dy)[o]=0; at(x+dx,y+dy).v=1; stack.push([x+dx,y+dy]);
+  }
+  at(0,0).n=0;                 // entrance
+  const gx=N/2, gy=N/2;        // goal (centre)
+  // clear a small chamber around the goal
+  [[gx-1,gy-1],[gx,gy-1],[gx-1,gy],[gx,gy]].forEach(([x,y])=>{
+    const c=at(x,y); if(x===gx-1&&y===gy-1){c.e=0;c.s=0} if(x===gx&&y===gy-1){c.w=0;c.s=0} if(x===gx-1&&y===gy){c.n=0;c.e=0} if(x===gx&&y===gy){c.n=0;c.w=0}
+  });
+  // walls
+  let d="";
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const c=at(x,y),X=x*S,Y=y*S;
+    if(c.n)d+=`M${X} ${Y}h${S}`; if(c.w)d+=`M${X} ${Y}v${S}`;
+    if(x===N-1&&c.e)d+=`M${X+S} ${Y}v${S}`; if(y===N-1&&c.s)d+=`M${X} ${Y+S}h${S}`;
+  }
+  // BFS solve
+  const q=[[0,0]], prev=new Map([["0,0",null]]); let found=null;
+  while(q.length){
+    const [x,y]=q.shift(); if(x>=gx-1&&x<=gx&&y>=gy-1&&y<=gy){found=[x,y];break}
+    for(const [k,dx,dy] of dirs){ if(at(x,y)[k])continue; const nx=x+dx,ny=y+dy,key=nx+","+ny; if(nx<0||ny<0||nx>=N||ny>=N||prev.has(key))continue; prev.set(key,x+","+y); q.push([nx,ny]) }
+  }
+  const pts=[]; let k=found?found.join(","):null;
+  while(k){const [x,y]=k.split(",").map(Number);pts.push([x*S+S/2,y*S+S/2]);k=prev.get(k)}
+  pts.reverse(); pts.unshift([S/2,-14]);
+  const pd="M"+pts.map(p=>p.join(" ")).join("L");
+  const cx=gx*S, cy=gy*S;
+  svg.innerHTML=`
+    <circle cx="${cx}" cy="${cy}" r="${S*1.25}" fill="rgba(155,227,111,.18)"/>
+    <circle cx="${cx}" cy="${cy}" r="${S*.8}" fill="#f5f1e8"/>
+    <circle cx="${cx}" cy="${cy}" r="${S*.55}" fill="none" stroke="#0b2418" stroke-width="2"/>
+    <path d="M${cx-4} ${cy-6}v12M${cx} ${cy-6}v12M${cx+4} ${cy-6}v12M${cx-4} ${cy}h8" stroke="#0b2418" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+    <path class="walls" d="${d}"/>
+    <path class="solve" id="solve" d="${pd}"/>`;
+  const sp=$("#solve"), L=sp.getTotalLength();
+  sp.style.strokeDasharray=L; sp.style.strokeDashoffset=L;
+  const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){sp.style.strokeDashoffset=0;return}
+  const run=()=>{sp.animate([{strokeDashoffset:L},{strokeDashoffset:0}],{duration:6500,delay:900,fill:"forwards",easing:"cubic-bezier(.45,.05,.3,1)"})};
+  new IntersectionObserver((e,o)=>{if(e[0].isIntersecting){run();o.disconnect()}},{threshold:.3}).observe(svg);
+})();
+
+/* ---------- BOOKING ---------- */
+const state={adults:2,children:0};
+const dateEl=$("#date"), slotsEl=$("#slots");
+const fmtISO=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+const today=new Date(); const max=new Date(today); max.setDate(max.getDate()+90);
+dateEl.min=fmtISO(today); dateEl.max=fmtISO(max);
+
+// deterministic SAMPLE availability from the date string
+function sampleAvailability(iso){
+  let h=0; for(const c of iso) h=(h*31+c.charCodeAt(0))>>>0;
+  const wk=new Date(iso+"T00:00:00").getDay(); const weekend=wk===0||wk===6;
+  return CONFIG.slots.map((s,i)=>{
+    const r=((h>>>(i*3))&7);
+    const left=Math.max(0,(weekend?r*4-6:r*8+6));
+    return {time:s,left:left>40?40:left};
+  });
+}
+function renderSlots(){
+  const iso=dateEl.value; slotsEl.innerHTML="";
+  if(!iso){slotsEl.innerHTML='<p style="color:var(--muted);font-size:15px">Pick a date to see available slots.</p>';return}
+  sampleAvailability(iso).forEach(s=>{
+    const id="slot-"+s.time.replace(/\W/g,"");
+    const full=s.left<=0, isToday=iso===fmtISO(today);
+    let past=false;
+    if(isToday){const [t,ap]=s.time.split(" ");let [hh,mm]=t.split(":").map(Number);if(ap==="PM"&&hh!==12)hh+=12;if(ap==="AM"&&hh===12)hh=0;past=new Date().getHours()*60+new Date().getMinutes()>=hh*60+mm}
+    const dis=full||past;
+    slotsEl.insertAdjacentHTML("beforeend",`<label class="chip"><input type="radio" name="slot" id="${id}" value="${s.time}" ${dis?"disabled":""}><span>${s.time}<small>${past?"Closed":full?"Sold out":s.left+" spots left"}</small></span></label>`);
+  });
+  $$("input[name=slot]").forEach(i=>i.addEventListener("change",update));
+}
+dateEl.addEventListener("change",()=>{renderSlots();update()});
+renderSlots();
+
+$$("[data-step]").forEach(b=>b.addEventListener("click",()=>{
+  const k=b.dataset.step, v=state[k]+Number(b.dataset.d);
+  const min=k==="adults"?1:0;
+  state[k]=Math.min(CONFIG.maxPerType,Math.max(min,v));
+  $("#"+k).textContent=state[k]; update();
+}));
+$$("input[name=pkg]").forEach(i=>i.addEventListener("change",update));
+$$("[data-pkg]").forEach(a=>a.addEventListener("click",()=>{const r=$(`input[name=pkg][value=${a.dataset.pkg}]`);r.checked=true;update()}));
+
+function calc(){
+  const pkg=$("input[name=pkg]:checked").value, p=CONFIG.prices[pkg];
+  const adults=state.adults*p, kids=Math.round(state.children*p*CONFIG.childRate);
+  return {pkg,p,adults,kids,total:adults+kids};
+}
+function update(){
+  const c=calc(), slot=$("input[name=slot]:checked"), iso=dateEl.value;
+  const dateTxt=iso?new Date(iso+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric"}):"Not selected";
+  $("#sumList").innerHTML=`
+    <dt>Date</dt><dd>${dateTxt}</dd>
+    <dt>Time slot</dt><dd>${slot?slot.value:"Not selected"}</dd>
+    <dt>Package</dt><dd>${c.pkg==="veg"?"Vegetarian":"Non-Veg"} · ${inr(c.p)}</dd>
+    <dt>Adults</dt><dd>${state.adults} × ${inr(c.p)} = ${inr(c.adults)}</dd>
+    <dt>Children</dt><dd>${state.children} × ${inr(Math.round(c.p*CONFIG.childRate))} = ${inr(c.kids)}</dd>`;
+  $("#total").textContent=inr(c.total);
+  $("#result").classList.remove("show");
+}
+update();
+
+function setErr(id,msg,input){ $("#"+id).textContent=msg||""; if(input){msg?input.setAttribute("aria-invalid","true"):input.removeAttribute("aria-invalid")} return !msg }
+function validate(){
+  const name=$("#name"),mob=$("#mobile"),em=$("#email"); let ok=true,first=null;
+  const chk=(good,id,msg,input)=>{const r=setErr(id,good?"":msg,input);if(!r){ok=false;first=first||input||$("#"+id)}};
+  chk(!!dateEl.value,"dateErr","Please choose a visit date.",dateEl);
+  chk(!!$("input[name=slot]:checked"),"slotErr","Please select a time slot.",null);
+  chk(state.adults>=1,"guestErr","At least one adult is required.",null);
+  chk(name.value.trim().length>=2,"nameErr","Enter your full name.",name);
+  chk(/^[6-9]\d{9}$/.test(mob.value.trim()),"mobileErr","Enter a valid 10-digit Indian mobile number.",mob);
+  chk(/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em.value.trim()),"emailErr","Enter a valid email address.",em);
+  if(first&&first.focus)first.focus(); else if(first)$("#slots").scrollIntoView({behavior:"smooth",block:"center"});
+  return ok;
+}
+$("#mobile").addEventListener("input",e=>e.target.value=e.target.value.replace(/\D/g,""));
+
+/* Replace this stub with a real API call + payment gateway later. */
+async function submitBooking(payload){
+  // e.g. const res = await fetch("/api/bookings",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+  return {status:"demo",message:"Demo only: no booking has been created and no payment was taken."};
+}
+$("#bookForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(!validate())return;
+  const c=calc(), payload={date:dateEl.value,slot:$("input[name=slot]:checked").value,package:c.pkg,adults:state.adults,children:state.children,total:c.total,name:$("#name").value.trim(),mobile:$("#mobile").value,email:$("#email").value.trim()};
+  const r=await submitBooking(payload), box=$("#result");
+  box.textContent=`${r.message} Your selection: ${payload.slot} on ${payload.date}, ${inr(payload.total)}. Once the booking system is connected, this step will confirm your reservation.`;
+  box.classList.add("show");
+});
+
+/* ---------- ENQUIRY / CONTACT ---------- */
+let enquiry="";
+$$("[data-enq]").forEach(a=>a.addEventListener("click",()=>{
+  enquiry=a.dataset.enq; const t=$("#enqText"); t.textContent=enquiry+" enquiry"; t.classList.remove("ph-txt");
+}));
+$("#waBtn").addEventListener("click",e=>{
+  if(!CONFIG.whatsappNumber){e.preventDefault();toast("WhatsApp number not set yet. Add it in CONFIG.whatsappNumber.");return}
+  const msg=encodeURIComponent(`Hi Maze & Meals! I'd like to enquire${enquiry?" about a "+enquiry.toLowerCase():""}.`);
+  e.currentTarget.href=`https://wa.me/${CONFIG.whatsappNumber}?text=${msg}`; e.currentTarget.target="_blank"; e.currentTarget.rel="noopener";
+});
+$("#igBtn").addEventListener("click",e=>{
+  if(!CONFIG.instagramUrl){e.preventDefault();toast("Instagram link not set yet. Add it in CONFIG.instagramUrl.");return}
+  e.currentTarget.href=CONFIG.instagramUrl; e.currentTarget.target="_blank"; e.currentTarget.rel="noopener";
+});
+$$("[data-soon]").forEach(a=>a.addEventListener("click",e=>{e.preventDefault();toast(a.dataset.soon+" page coming soon.")}));
+</script>
+</body>
+</html>
